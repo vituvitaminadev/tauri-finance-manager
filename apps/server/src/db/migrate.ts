@@ -52,4 +52,22 @@ export function runMigrations(
       amount_cents INTEGER NOT NULL
     )
   `);
+
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS expense_entries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+      year INTEGER NOT NULL,
+      month INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      amount_cents INTEGER NOT NULL,
+      payment_method TEXT NOT NULL,
+      category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
+      credit_card_id INTEGER REFERENCES credit_cards(id) ON DELETE SET NULL,
+      fixed_expense_id INTEGER,
+      installment_group_id INTEGER,
+      installment_index INTEGER,
+      installment_total INTEGER
+    )
+  `);
 }

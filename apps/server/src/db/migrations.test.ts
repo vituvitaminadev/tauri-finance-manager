@@ -83,6 +83,39 @@ describe("drizzle migrations", () => {
     sqlite.close();
   });
 
+  it("creates expense_entries table with all required columns", () => {
+    const sqlite = new Database(":memory:");
+    sqlite.pragma("foreign_keys = ON");
+    const db = drizzle(sqlite);
+    runMigrations(db, sqlite);
+
+    sqlite.exec(`INSERT INTO profiles (name, theme) VALUES ('Alice', 'light')`);
+    const profile = sqlite.prepare("SELECT id FROM profiles WHERE id = last_insert_rowid()").get() as { id: number };
+    sqlite.exec(`INSERT INTO categories (profile_id, name) VALUES (${profile.id}, 'Food')`);
+    const cat = sqlite.prepare("SELECT id FROM categories WHERE profile_id = ?").get(profile.id) as { id: number };
+
+    sqlite.exec(`
+      INSERT INTO expense_entries (profile_id, year, month, name, amount_cents, payment_method, category_id)
+      VALUES (${profile.id}, 2026, 4, 'Lunch', 2500, 'debit', ${cat.id})
+    `);
+    const entry = sqlite.prepare("SELECT * FROM expense_entries WHERE profile_id = ?").get(profile.id) as {
+      id: number; name: string; amount_cents: number; payment_method: string; category_id: number;
+      credit_card_id: number | null; fixed_expense_id: number | null;
+      installment_group_id: number | null; installment_index: number | null; installment_total: number | null;
+    };
+    expect(entry.name).toBe("Lunch");
+    expect(entry.amount_cents).toBe(2500);
+    expect(entry.payment_method).toBe("debit");
+    expect(entry.credit_card_id).toBeNull();
+    expect(entry.fixed_expense_id).toBeNull();
+    expect(entry.installment_group_id).toBeNull();
+
+    sqlite.exec(`DELETE FROM profiles WHERE id = ${profile.id}`);
+    const remaining = sqlite.prepare("SELECT * FROM expense_entries WHERE profile_id = ?").all(profile.id);
+    expect(remaining).toHaveLength(0);
+    sqlite.close();
+  });
+
   it("creates credit_cards table scoped to profiles with cascade delete", () => {
     const sqlite = new Database(":memory:");
     sqlite.pragma("foreign_keys = ON");
