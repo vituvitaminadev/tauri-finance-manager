@@ -116,6 +116,31 @@ describe("drizzle migrations", () => {
     sqlite.close();
   });
 
+  it("creates category_limits table scoped to profiles", () => {
+    const sqlite = new Database(":memory:");
+    sqlite.pragma("foreign_keys = ON");
+    const db = drizzle(sqlite);
+    runMigrations(db, sqlite);
+
+    sqlite.exec(`INSERT INTO profiles (name, theme) VALUES ('Alice', 'light')`);
+    const profile = sqlite.prepare("SELECT id FROM profiles WHERE id = last_insert_rowid()").get() as { id: number };
+    sqlite.exec(`INSERT INTO categories (profile_id, name) VALUES (${profile.id}, 'Food')`);
+    const cat = sqlite.prepare("SELECT id FROM categories WHERE profile_id = ?").get(profile.id) as { id: number };
+
+    sqlite.exec(`INSERT INTO category_limits (profile_id, category_id, year, month, limit_cents) VALUES (${profile.id}, ${cat.id}, 2026, 4, 50000)`);
+    const limit = sqlite.prepare("SELECT * FROM category_limits WHERE profile_id = ?").get(profile.id) as {
+      id: number; profile_id: number; category_id: number; year: number; month: number; limit_cents: number;
+    };
+    expect(limit.limit_cents).toBe(50000);
+    expect(limit.month).toBe(4);
+    expect(limit.year).toBe(2026);
+
+    sqlite.exec(`DELETE FROM profiles WHERE id = ${profile.id}`);
+    const remaining = sqlite.prepare("SELECT * FROM category_limits WHERE profile_id = ?").all(profile.id);
+    expect(remaining).toHaveLength(0);
+    sqlite.close();
+  });
+
   it("creates credit_cards table scoped to profiles with cascade delete", () => {
     const sqlite = new Database(":memory:");
     sqlite.pragma("foreign_keys = ON");

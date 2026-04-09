@@ -27,6 +27,15 @@ export const incomeEntries = sqliteTable("income_entries", {
   amountCents: integer("amount_cents").notNull(),
 });
 
+export const categoryLimits = sqliteTable("category_limits", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  profileId: integer("profile_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  categoryId: integer("category_id").notNull().references(() => categories.id, { onDelete: "cascade" }),
+  year: integer("year").notNull(),
+  month: integer("month").notNull(),
+  limitCents: integer("limit_cents").notNull(),
+});
+
 export const expenseEntries = sqliteTable("expense_entries", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   profileId: integer("profile_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
@@ -51,3 +60,4 @@ export type Category = typeof categories.$inferSelect;
 export type CreditCard = typeof creditCards.$inferSelect;
 export type IncomeEntry = typeof incomeEntries.$inferSelect;
 export type ExpenseEntry = typeof expenseEntries.$inferSelect;
+export type CategoryLimit = typeof categoryLimits.$inferSelect;

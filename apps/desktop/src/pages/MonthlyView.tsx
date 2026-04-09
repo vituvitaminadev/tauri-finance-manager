@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { trpc } from "../lib/trpc";
 import { useProfile } from "../context/profile";
+import { CategorySpendingTable } from "../components/CategorySpendingTable";
 
 interface IncomeEntry {
   id: number;
@@ -53,6 +54,7 @@ export function MonthlyView() {
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
 
+  const [spendingRefreshKey, setSpendingRefreshKey] = useState(0);
   const [incomeEntries, setIncomeEntries] = useState<IncomeEntry[]>([]);
   const [expenseEntries, setExpenseEntries] = useState<ExpenseEntry[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -136,6 +138,7 @@ export function MonthlyView() {
     });
     setExpenseEntries((prev) => [...prev, entry as ExpenseEntry]);
     setNewExpenseName(""); setNewExpenseAmount(""); setNewExpenseMethod("debit"); setNewExpenseCatId(null); setNewExpenseCardId(null);
+    setSpendingRefreshKey((k) => k + 1);
   }
 
   async function saveExpenseEdit(e: React.FormEvent) {
@@ -151,12 +154,14 @@ export function MonthlyView() {
     });
     setExpenseEntries((prev) => prev.map((e) => (e.id === editExpenseId ? (updated as ExpenseEntry) : e)));
     setEditExpenseId(null);
+    setSpendingRefreshKey((k) => k + 1);
   }
 
   async function deleteExpense(id: number) {
     await trpc.expense.delete.mutate({ id });
     setExpenseEntries((prev) => prev.filter((e) => e.id !== id));
     setDeleteExpenseId(null);
+    setSpendingRefreshKey((k) => k + 1);
   }
 
   const totalIncome = incomeEntries.reduce((sum, e) => sum + e.amountCents, 0);
@@ -249,6 +254,15 @@ export function MonthlyView() {
           </div>
         </form>
       </section>
+
+      {/* Category spending table */}
+      <CategorySpendingTable
+        profileId={profileId}
+        year={year}
+        month={month}
+        categories={categories}
+        refreshKey={spendingRefreshKey}
+      />
 
       {/* Income dialogs */}
       {editIncomeId !== null && (

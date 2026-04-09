@@ -3,6 +3,7 @@ import { profileRouter } from "./profile";
 import { categoryRouter, creditCardRouter } from "./category";
 import { incomeRouter } from "./income";
 import { expenseRouter } from "./expense";
+import { categoryLimitRouter } from "./categoryLimit";
 
 export { router, publicProcedure, createCallerFactory } from "./trpc";
 export type { Context } from "./trpc";
@@ -18,6 +19,7 @@ export const appRouter = router({
   creditCard: creditCardRouter,
   income: incomeRouter,
   expense: expenseRouter,
+  categoryLimit: categoryLimitRouter,
 });
 
 export type AppRouter = typeof appRouter;
