@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { trpcServer } from "@hono/trpc-server";
 import { appRouter } from "./router/index";
-import "./db/index"; // runs migrations on startup
+import { db } from "./db/index";
 
 const PORT = Number(process.env.PORT ?? 3001);
 
@@ -19,7 +19,7 @@ app.use(
   "/trpc/*",
   trpcServer({
     router: appRouter,
-    createContext: () => ({}),
+    createContext: () => ({ db }),
   })
 );
 

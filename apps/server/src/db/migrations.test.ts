@@ -18,4 +18,22 @@ describe("drizzle migrations", () => {
     expect(() => runMigrations(db, sqlite)).not.toThrow();
     sqlite.close();
   });
+
+  it("creates the profiles table with id, name, and theme columns", () => {
+    const sqlite = new Database(":memory:");
+    const db = drizzle(sqlite);
+    runMigrations(db, sqlite);
+
+    // Insert a row to verify the table and columns exist
+    sqlite.exec(`INSERT INTO profiles (name, theme) VALUES ('Alice', 'dark')`);
+    const row = sqlite.prepare("SELECT * FROM profiles WHERE name = 'Alice'").get() as {
+      id: number;
+      name: string;
+      theme: string;
+    };
+    expect(row.name).toBe("Alice");
+    expect(row.theme).toBe("dark");
+    expect(typeof row.id).toBe("number");
+    sqlite.close();
+  });
 });

@@ -1,10 +1,8 @@
-import { initTRPC } from "@trpc/server";
+import { router, publicProcedure } from "./trpc";
+import { profileRouter } from "./profile";
 
-const t = initTRPC.context<Record<string, never>>().create();
-
-export const router = t.router;
-export const publicProcedure = t.procedure;
-export const createCallerFactory = t.createCallerFactory;
+export { router, publicProcedure, createCallerFactory } from "./trpc";
+export type { Context } from "./trpc";
 
 const healthRouter = router({
   ping: publicProcedure.query(() => "pong" as const),
@@ -12,6 +10,7 @@ const healthRouter = router({
 
 export const appRouter = router({
   health: healthRouter,
+  profile: profileRouter,
 });
 
 export type AppRouter = typeof appRouter;
