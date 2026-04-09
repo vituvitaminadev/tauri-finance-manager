@@ -78,6 +78,27 @@ export function runMigrations(
   }
 
   sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS investment_goals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      target_cents INTEGER,
+      archived INTEGER NOT NULL DEFAULT 0
+    )
+  `);
+
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS investment_contributions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      goal_id INTEGER NOT NULL REFERENCES investment_goals(id) ON DELETE CASCADE,
+      year INTEGER NOT NULL,
+      month INTEGER NOT NULL,
+      amount_cents INTEGER NOT NULL,
+      note TEXT
+    )
+  `);
+
+  sqlite.exec(`
     CREATE TABLE IF NOT EXISTS installment_groups (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,

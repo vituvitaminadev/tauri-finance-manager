@@ -211,6 +211,36 @@ describe("drizzle migrations", () => {
     sqlite.close();
   });
 
+  it("creates investment_goals and investment_contributions tables", () => {
+    const sqlite = new Database(":memory:");
+    sqlite.pragma("foreign_keys = ON");
+    const db = drizzle(sqlite);
+    runMigrations(db, sqlite);
+
+    sqlite.exec(`INSERT INTO profiles (name, theme) VALUES ('Alice', 'light')`);
+    const profile = sqlite.prepare("SELECT id FROM profiles WHERE id = last_insert_rowid()").get() as { id: number };
+
+    sqlite.exec(`INSERT INTO investment_goals (profile_id, name, target_cents, archived) VALUES (${profile.id}, 'Emergency Fund', 1000000, 0)`);
+    const goal = sqlite.prepare("SELECT * FROM investment_goals WHERE profile_id = ?").get(profile.id) as {
+      id: number; name: string; target_cents: number | null; archived: number;
+    };
+    expect(goal.name).toBe("Emergency Fund");
+    expect(goal.target_cents).toBe(1000000);
+    expect(goal.archived).toBe(0);
+
+    sqlite.exec(`INSERT INTO investment_contributions (goal_id, year, month, amount_cents, note) VALUES (${goal.id}, 2026, 4, 50000, 'April savings')`);
+    const contrib = sqlite.prepare("SELECT * FROM investment_contributions WHERE goal_id = ?").get(goal.id) as {
+      id: number; amount_cents: number; note: string;
+    };
+    expect(contrib.amount_cents).toBe(50000);
+    expect(contrib.note).toBe("April savings");
+
+    sqlite.exec(`DELETE FROM profiles WHERE id = ${profile.id}`);
+    expect(sqlite.prepare("SELECT * FROM investment_goals WHERE profile_id = ?").all(profile.id)).toHaveLength(0);
+    expect(sqlite.prepare("SELECT * FROM investment_contributions WHERE goal_id = ?").all(goal.id)).toHaveLength(0);
+    sqlite.close();
+  });
+
   it("creates credit_cards table scoped to profiles with cascade delete", () => {
     const sqlite = new Database(":memory:");
     sqlite.pragma("foreign_keys = ON");

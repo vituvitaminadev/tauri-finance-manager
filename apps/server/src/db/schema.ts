@@ -49,6 +49,23 @@ export const incomeEntries = sqliteTable("income_entries", {
   recurringIncomeId: integer("recurring_income_id").references(() => recurringIncome.id, { onDelete: "set null" }),
 });
 
+export const investmentGoals = sqliteTable("investment_goals", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  profileId: integer("profile_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  targetCents: integer("target_cents"),
+  archived: integer("archived", { mode: "boolean" }).notNull().default(false),
+});
+
+export const investmentContributions = sqliteTable("investment_contributions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  goalId: integer("goal_id").notNull().references(() => investmentGoals.id, { onDelete: "cascade" }),
+  year: integer("year").notNull(),
+  month: integer("month").notNull(),
+  amountCents: integer("amount_cents").notNull(),
+  note: text("note"),
+});
+
 export const installmentGroups = sqliteTable("installment_groups", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   profileId: integer("profile_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
@@ -103,3 +120,5 @@ export type RecurringIncome = typeof recurringIncome.$inferSelect;
 export type FixedExpense = typeof fixedExpenses.$inferSelect;
 export type MonthInitialization = typeof monthInitializations.$inferSelect;
 export type InstallmentGroup = typeof installmentGroups.$inferSelect;
+export type InvestmentGoal = typeof investmentGoals.$inferSelect;
+export type InvestmentContribution = typeof investmentContributions.$inferSelect;
