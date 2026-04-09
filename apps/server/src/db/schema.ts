@@ -49,6 +49,15 @@ export const incomeEntries = sqliteTable("income_entries", {
   recurringIncomeId: integer("recurring_income_id").references(() => recurringIncome.id, { onDelete: "set null" }),
 });
 
+export const installmentGroups = sqliteTable("installment_groups", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  profileId: integer("profile_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  totalInstallments: integer("total_installments").notNull(),
+  categoryId: integer("category_id").references(() => categories.id, { onDelete: "set null" }),
+  creditCardId: integer("credit_card_id").references(() => creditCards.id, { onDelete: "set null" }),
+});
+
 export const monthInitializations = sqliteTable("month_initializations", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   profileId: integer("profile_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
@@ -93,3 +102,4 @@ export type CategoryLimit = typeof categoryLimits.$inferSelect;
 export type RecurringIncome = typeof recurringIncome.$inferSelect;
 export type FixedExpense = typeof fixedExpenses.$inferSelect;
 export type MonthInitialization = typeof monthInitializations.$inferSelect;
+export type InstallmentGroup = typeof installmentGroups.$inferSelect;

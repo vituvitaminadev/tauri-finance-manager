@@ -6,6 +6,7 @@ import { expenseRouter } from "./expense";
 import { categoryLimitRouter } from "./categoryLimit";
 import { recurringIncomeRouter, fixedExpenseRouter } from "./recurring";
 import { autoLaunchRouter } from "./autoLaunch";
+import { installmentRouter } from "./installment";
 
 export { router, publicProcedure, createCallerFactory } from "./trpc";
 export type { Context } from "./trpc";
@@ -25,6 +26,7 @@ export const appRouter = router({
   recurringIncome: recurringIncomeRouter,
   fixedExpense: fixedExpenseRouter,
   autoLaunch: autoLaunchRouter,
+  installment: installmentRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { trpc } from "../lib/trpc";
 import { useProfile } from "../context/profile";
 import { CategorySpendingTable } from "../components/CategorySpendingTable";
+import { InstallmentForm } from "../components/InstallmentForm";
 
 interface IncomeEntry {
   id: number;
@@ -24,6 +25,7 @@ interface ExpenseEntry {
   categoryId: number | null;
   creditCardId: number | null;
   fixedExpenseId?: number | null;
+  installmentGroupId?: number | null;
 }
 
 interface Category { id: number; name: string; }
@@ -83,6 +85,7 @@ export function MonthlyView() {
   const [editExpenseCatId, setEditExpenseCatId] = useState<number | null>(null);
   const [editExpenseCardId, setEditExpenseCardId] = useState<number | null>(null);
   const [deleteExpenseId, setDeleteExpenseId] = useState<number | null>(null);
+  const [showInstallmentForm, setShowInstallmentForm] = useState(false);
 
   useEffect(() => {
     trpc.category.list.query({ profileId }).then((d) => setCategories(d as Category[]));
@@ -169,6 +172,19 @@ export function MonthlyView() {
     setSpendingRefreshKey((k) => k + 1);
   }
 
+  async function cancelInstallmentsFrom(entryId: number) {
+    await trpc.installment.cancelFrom.mutate({ expenseEntryId: entryId });
+    // Reload expenses for current month
+    const updated = await trpc.expense.list.query({ profileId, year, month });
+    setExpenseEntries(updated as ExpenseEntry[]);
+    setSpendingRefreshKey((k) => k + 1);
+  }
+
+  function onInstallmentCreated() {
+    trpc.expense.list.query({ profileId, year, month }).then((d) => setExpenseEntries(d as ExpenseEntry[]));
+    setSpendingRefreshKey((k) => k + 1);
+  }
+
   const totalIncome = incomeEntries.reduce((sum, e) => sum + e.amountCents, 0);
   const totalExpenses = expenseEntries.reduce((sum, e) => sum + e.amountCents, 0);
   const balance = totalIncome - totalExpenses;
@@ -216,7 +232,10 @@ export function MonthlyView() {
 
       {/* Expense section */}
       <section>
-        <h3 className="mb-4 text-lg font-semibold">Despesas</h3>
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Despesas</h3>
+          <button onClick={() => setShowInstallmentForm(true)} className="rounded-md border px-3 py-1.5 text-xs hover:bg-accent">+ Parcelas</button>
+        </div>
         <ul className="space-y-2">
           {expenseEntries.map((entry) => (
             <li key={entry.id} className="flex items-center justify-between rounded-md border px-4 py-2">
@@ -224,6 +243,7 @@ export function MonthlyView() {
                 <div className="flex items-center gap-2">
                   {entry.name}
                   {entry.fixedExpenseId && <span className="rounded bg-orange-100 px-1.5 py-0.5 text-xs text-orange-700">↺ Fixo</span>}
+                  {entry.installmentGroupId && <span className="rounded bg-purple-100 px-1.5 py-0.5 text-xs text-purple-700">📦 Parcelado</span>}
                 </div>
                 <div className="text-xs text-muted-foreground">
                   {PAYMENT_LABELS[entry.paymentMethod as PaymentMethod]}
@@ -237,6 +257,9 @@ export function MonthlyView() {
                   setEditExpenseId(entry.id); setEditExpenseName(entry.name); setEditExpenseAmount(String(entry.amountCents));
                   setEditExpenseMethod(entry.paymentMethod as PaymentMethod); setEditExpenseCatId(entry.categoryId); setEditExpenseCardId(entry.creditCardId);
                 }} className="text-xs text-muted-foreground underline">Editar</button>
+                {entry.installmentGroupId && (
+                  <button onClick={() => cancelInstallmentsFrom(entry.id)} className="text-xs text-orange-600 underline">Cancelar restantes</button>
+                )}
                 <button onClick={() => setDeleteExpenseId(entry.id)} className="text-xs text-destructive underline">Excluir</button>
               </div>
             </li>
@@ -265,6 +288,18 @@ export function MonthlyView() {
           </div>
         </form>
       </section>
+
+      {/* Installment form */}
+      {showInstallmentForm && (
+        <InstallmentForm
+          categories={categories}
+          creditCards={creditCards}
+          currentYear={year}
+          currentMonth={month}
+          onCreated={onInstallmentCreated}
+          onClose={() => setShowInstallmentForm(false)}
+        />
+      )}
 
       {/* Category spending table */}
       <CategorySpendingTable

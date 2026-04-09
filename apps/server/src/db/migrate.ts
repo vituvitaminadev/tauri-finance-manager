@@ -78,6 +78,17 @@ export function runMigrations(
   }
 
   sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS installment_groups (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      total_installments INTEGER NOT NULL,
+      category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
+      credit_card_id INTEGER REFERENCES credit_cards(id) ON DELETE SET NULL
+    )
+  `);
+
+  sqlite.exec(`
     CREATE TABLE IF NOT EXISTS month_initializations (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,

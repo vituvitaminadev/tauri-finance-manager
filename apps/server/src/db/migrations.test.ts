@@ -190,6 +190,27 @@ describe("drizzle migrations", () => {
     sqlite.close();
   });
 
+  it("creates installment_groups table", () => {
+    const sqlite = new Database(":memory:");
+    sqlite.pragma("foreign_keys = ON");
+    const db = drizzle(sqlite);
+    runMigrations(db, sqlite);
+
+    sqlite.exec(`INSERT INTO profiles (name, theme) VALUES ('Alice', 'light')`);
+    const profile = sqlite.prepare("SELECT id FROM profiles WHERE id = last_insert_rowid()").get() as { id: number };
+
+    sqlite.exec(`INSERT INTO installment_groups (profile_id, name, total_installments) VALUES (${profile.id}, 'Smart TV', 12)`);
+    const group = sqlite.prepare("SELECT * FROM installment_groups WHERE profile_id = ?").get(profile.id) as {
+      id: number; name: string; total_installments: number;
+    };
+    expect(group.name).toBe("Smart TV");
+    expect(group.total_installments).toBe(12);
+
+    sqlite.exec(`DELETE FROM profiles WHERE id = ${profile.id}`);
+    expect(sqlite.prepare("SELECT * FROM installment_groups WHERE profile_id = ?").all(profile.id)).toHaveLength(0);
+    sqlite.close();
+  });
+
   it("creates credit_cards table scoped to profiles with cascade delete", () => {
     const sqlite = new Database(":memory:");
     sqlite.pragma("foreign_keys = ON");
