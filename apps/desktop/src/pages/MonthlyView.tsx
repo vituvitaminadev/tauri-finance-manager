@@ -10,6 +10,7 @@ interface IncomeEntry {
   month: number;
   name: string;
   amountCents: number;
+  recurringIncomeId?: number | null;
 }
 
 interface ExpenseEntry {
@@ -22,6 +23,7 @@ interface ExpenseEntry {
   paymentMethod: string;
   categoryId: number | null;
   creditCardId: number | null;
+  fixedExpenseId?: number | null;
 }
 
 interface Category { id: number; name: string; }
@@ -88,8 +90,11 @@ export function MonthlyView() {
   }, [profileId]);
 
   useEffect(() => {
-    trpc.income.list.query({ profileId, year, month }).then((d) => setIncomeEntries(d as IncomeEntry[]));
-    trpc.expense.list.query({ profileId, year, month }).then((d) => setExpenseEntries(d as ExpenseEntry[]));
+    // Auto-launch templates for this month, then load entries
+    trpc.autoLaunch.initMonth.mutate({ profileId, year, month }).then(() => {
+      trpc.income.list.query({ profileId, year, month }).then((d) => setIncomeEntries(d as IncomeEntry[]));
+      trpc.expense.list.query({ profileId, year, month }).then((d) => setExpenseEntries(d as ExpenseEntry[]));
+    });
   }, [profileId, year, month]);
 
   function navigate(delta: number) {
@@ -190,7 +195,10 @@ export function MonthlyView() {
         <ul className="space-y-2">
           {incomeEntries.map((entry) => (
             <li key={entry.id} className="flex items-center justify-between rounded-md border px-4 py-2">
-              <span>{entry.name}</span>
+              <span className="flex items-center gap-2">
+                {entry.name}
+                {entry.recurringIncomeId && <span className="rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">↺ Recorrente</span>}
+              </span>
               <div className="flex items-center gap-4">
                 <span className="text-sm font-medium text-green-600">{formatBRL(entry.amountCents)}</span>
                 <button onClick={() => { setEditIncomeId(entry.id); setEditIncomeName(entry.name); setEditIncomeAmount(String(entry.amountCents)); }} className="text-xs text-muted-foreground underline">Editar</button>
@@ -213,7 +221,10 @@ export function MonthlyView() {
           {expenseEntries.map((entry) => (
             <li key={entry.id} className="flex items-center justify-between rounded-md border px-4 py-2">
               <div>
-                <div>{entry.name}</div>
+                <div className="flex items-center gap-2">
+                  {entry.name}
+                  {entry.fixedExpenseId && <span className="rounded bg-orange-100 px-1.5 py-0.5 text-xs text-orange-700">↺ Fixo</span>}
+                </div>
                 <div className="text-xs text-muted-foreground">
                   {PAYMENT_LABELS[entry.paymentMethod as PaymentMethod]}
                   {entry.categoryId && ` · ${categories.find((c) => c.id === entry.categoryId)?.name}`}

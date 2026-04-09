@@ -172,6 +172,24 @@ describe("drizzle migrations", () => {
     sqlite.close();
   });
 
+  it("creates month_initializations table", () => {
+    const sqlite = new Database(":memory:");
+    sqlite.pragma("foreign_keys = ON");
+    const db = drizzle(sqlite);
+    runMigrations(db, sqlite);
+
+    sqlite.exec(`INSERT INTO profiles (name, theme) VALUES ('Alice', 'light')`);
+    const profile = sqlite.prepare("SELECT id FROM profiles WHERE id = last_insert_rowid()").get() as { id: number };
+    sqlite.exec(`INSERT INTO month_initializations (profile_id, year, month) VALUES (${profile.id}, 2026, 4)`);
+    const row = sqlite.prepare("SELECT * FROM month_initializations WHERE profile_id = ?").get(profile.id) as { id: number; year: number; month: number };
+    expect(row.year).toBe(2026);
+    expect(row.month).toBe(4);
+
+    // Unique constraint — cannot insert same month twice
+    expect(() => sqlite.exec(`INSERT INTO month_initializations (profile_id, year, month) VALUES (${profile.id}, 2026, 4)`)).toThrow();
+    sqlite.close();
+  });
+
   it("creates credit_cards table scoped to profiles with cascade delete", () => {
     const sqlite = new Database(":memory:");
     sqlite.pragma("foreign_keys = ON");

@@ -18,15 +18,6 @@ export const creditCards = sqliteTable("credit_cards", {
   name: text("name").notNull(),
 });
 
-export const incomeEntries = sqliteTable("income_entries", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  profileId: integer("profile_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
-  year: integer("year").notNull(),
-  month: integer("month").notNull(),
-  name: text("name").notNull(),
-  amountCents: integer("amount_cents").notNull(),
-});
-
 export const recurringIncome = sqliteTable("recurring_income", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   profileId: integer("profile_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
@@ -46,6 +37,23 @@ export const fixedExpenses = sqliteTable("fixed_expenses", {
   categoryId: integer("category_id").references(() => categories.id, { onDelete: "set null" }),
   creditCardId: integer("credit_card_id").references(() => creditCards.id, { onDelete: "set null" }),
   active: integer("active", { mode: "boolean" }).notNull().default(true),
+});
+
+export const incomeEntries = sqliteTable("income_entries", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  profileId: integer("profile_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  year: integer("year").notNull(),
+  month: integer("month").notNull(),
+  name: text("name").notNull(),
+  amountCents: integer("amount_cents").notNull(),
+  recurringIncomeId: integer("recurring_income_id").references(() => recurringIncome.id, { onDelete: "set null" }),
+});
+
+export const monthInitializations = sqliteTable("month_initializations", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  profileId: integer("profile_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  year: integer("year").notNull(),
+  month: integer("month").notNull(),
 });
 
 export const categoryLimits = sqliteTable("category_limits", {
@@ -69,7 +77,7 @@ export const expenseEntries = sqliteTable("expense_entries", {
   }).notNull(),
   categoryId: integer("category_id").references(() => categories.id, { onDelete: "set null" }),
   creditCardId: integer("credit_card_id").references(() => creditCards.id, { onDelete: "set null" }),
-  fixedExpenseId: integer("fixed_expense_id"),
+  fixedExpenseId: integer("fixed_expense_id").references(() => fixedExpenses.id, { onDelete: "set null" }),
   installmentGroupId: integer("installment_group_id"),
   installmentIndex: integer("installment_index"),
   installmentTotal: integer("installment_total"),
@@ -84,3 +92,4 @@ export type ExpenseEntry = typeof expenseEntries.$inferSelect;
 export type CategoryLimit = typeof categoryLimits.$inferSelect;
 export type RecurringIncome = typeof recurringIncome.$inferSelect;
 export type FixedExpense = typeof fixedExpenses.$inferSelect;
+export type MonthInitialization = typeof monthInitializations.$inferSelect;

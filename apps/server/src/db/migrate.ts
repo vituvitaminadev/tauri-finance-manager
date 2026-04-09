@@ -1,11 +1,6 @@
 import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import type { Database } from "better-sqlite3";
 
-/**
- * Runs all pending Drizzle migrations against the given SQLite database.
- * Uses manual SQL execution since no tables exist yet in the scaffold phase.
- * Future issues will use drizzle-kit generated migration files.
- */
 export function runMigrations(
   _db: BetterSQLite3Database,
   sqlite: Database
@@ -43,17 +38,6 @@ export function runMigrations(
   `);
 
   sqlite.exec(`
-    CREATE TABLE IF NOT EXISTS income_entries (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-      year INTEGER NOT NULL,
-      month INTEGER NOT NULL,
-      name TEXT NOT NULL,
-      amount_cents INTEGER NOT NULL
-    )
-  `);
-
-  sqlite.exec(`
     CREATE TABLE IF NOT EXISTS recurring_income (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -73,6 +57,33 @@ export function runMigrations(
       category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
       credit_card_id INTEGER REFERENCES credit_cards(id) ON DELETE SET NULL,
       active INTEGER NOT NULL DEFAULT 1
+    )
+  `);
+
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS income_entries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+      year INTEGER NOT NULL,
+      month INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      amount_cents INTEGER NOT NULL
+    )
+  `);
+
+  // Add recurring_income_id column to income_entries if not present (idempotent)
+  const incomeColumns = sqlite.prepare("PRAGMA table_info(income_entries)").all() as { name: string }[];
+  if (!incomeColumns.find((c) => c.name === "recurring_income_id")) {
+    sqlite.exec(`ALTER TABLE income_entries ADD COLUMN recurring_income_id INTEGER REFERENCES recurring_income(id) ON DELETE SET NULL`);
+  }
+
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS month_initializations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+      year INTEGER NOT NULL,
+      month INTEGER NOT NULL,
+      UNIQUE(profile_id, year, month)
     )
   `);
 
@@ -99,7 +110,7 @@ export function runMigrations(
       payment_method TEXT NOT NULL,
       category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
       credit_card_id INTEGER REFERENCES credit_cards(id) ON DELETE SET NULL,
-      fixed_expense_id INTEGER,
+      fixed_expense_id INTEGER REFERENCES fixed_expenses(id) ON DELETE SET NULL,
       installment_group_id INTEGER,
       installment_index INTEGER,
       installment_total INTEGER
