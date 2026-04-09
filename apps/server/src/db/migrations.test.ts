@@ -141,6 +141,37 @@ describe("drizzle migrations", () => {
     sqlite.close();
   });
 
+  it("creates recurring_income and fixed_expenses tables", () => {
+    const sqlite = new Database(":memory:");
+    sqlite.pragma("foreign_keys = ON");
+    const db = drizzle(sqlite);
+    runMigrations(db, sqlite);
+
+    sqlite.exec(`INSERT INTO profiles (name, theme) VALUES ('Alice', 'light')`);
+    const profile = sqlite.prepare("SELECT id FROM profiles WHERE id = last_insert_rowid()").get() as { id: number };
+
+    sqlite.exec(`INSERT INTO recurring_income (profile_id, name, amount_cents, active) VALUES (${profile.id}, 'Salary', 500000, 1)`);
+    const ri = sqlite.prepare("SELECT * FROM recurring_income WHERE profile_id = ?").get(profile.id) as {
+      id: number; name: string; amount_cents: number; active: number;
+    };
+    expect(ri.name).toBe("Salary");
+    expect(ri.active).toBe(1);
+
+    sqlite.exec(`INSERT INTO categories (profile_id, name) VALUES (${profile.id}, 'Housing')`);
+    const cat = sqlite.prepare("SELECT id FROM categories WHERE profile_id = ?").get(profile.id) as { id: number };
+    sqlite.exec(`INSERT INTO fixed_expenses (profile_id, name, amount_cents, payment_method, category_id, active) VALUES (${profile.id}, 'Rent', 150000, 'debit', ${cat.id}, 1)`);
+    const fe = sqlite.prepare("SELECT * FROM fixed_expenses WHERE profile_id = ?").get(profile.id) as {
+      id: number; name: string; amount_cents: number; payment_method: string; active: number;
+    };
+    expect(fe.name).toBe("Rent");
+    expect(fe.payment_method).toBe("debit");
+
+    sqlite.exec(`DELETE FROM profiles WHERE id = ${profile.id}`);
+    expect(sqlite.prepare("SELECT * FROM recurring_income WHERE profile_id = ?").all(profile.id)).toHaveLength(0);
+    expect(sqlite.prepare("SELECT * FROM fixed_expenses WHERE profile_id = ?").all(profile.id)).toHaveLength(0);
+    sqlite.close();
+  });
+
   it("creates credit_cards table scoped to profiles with cascade delete", () => {
     const sqlite = new Database(":memory:");
     sqlite.pragma("foreign_keys = ON");

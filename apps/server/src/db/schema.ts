@@ -27,6 +27,27 @@ export const incomeEntries = sqliteTable("income_entries", {
   amountCents: integer("amount_cents").notNull(),
 });
 
+export const recurringIncome = sqliteTable("recurring_income", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  profileId: integer("profile_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  amountCents: integer("amount_cents").notNull(),
+  active: integer("active", { mode: "boolean" }).notNull().default(true),
+});
+
+export const fixedExpenses = sqliteTable("fixed_expenses", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  profileId: integer("profile_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  amountCents: integer("amount_cents").notNull(),
+  paymentMethod: text("payment_method", {
+    enum: ["debit", "pix", "boleto", "cash", "credit_card"],
+  }).notNull(),
+  categoryId: integer("category_id").references(() => categories.id, { onDelete: "set null" }),
+  creditCardId: integer("credit_card_id").references(() => creditCards.id, { onDelete: "set null" }),
+  active: integer("active", { mode: "boolean" }).notNull().default(true),
+});
+
 export const categoryLimits = sqliteTable("category_limits", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   profileId: integer("profile_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
@@ -61,3 +82,5 @@ export type CreditCard = typeof creditCards.$inferSelect;
 export type IncomeEntry = typeof incomeEntries.$inferSelect;
 export type ExpenseEntry = typeof expenseEntries.$inferSelect;
 export type CategoryLimit = typeof categoryLimits.$inferSelect;
+export type RecurringIncome = typeof recurringIncome.$inferSelect;
+export type FixedExpense = typeof fixedExpenses.$inferSelect;

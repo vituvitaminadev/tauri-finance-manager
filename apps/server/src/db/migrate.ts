@@ -54,6 +54,29 @@ export function runMigrations(
   `);
 
   sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS recurring_income (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      amount_cents INTEGER NOT NULL,
+      active INTEGER NOT NULL DEFAULT 1
+    )
+  `);
+
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS fixed_expenses (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      amount_cents INTEGER NOT NULL,
+      payment_method TEXT NOT NULL,
+      category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
+      credit_card_id INTEGER REFERENCES credit_cards(id) ON DELETE SET NULL,
+      active INTEGER NOT NULL DEFAULT 1
+    )
+  `);
+
+  sqlite.exec(`
     CREATE TABLE IF NOT EXISTS category_limits (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
