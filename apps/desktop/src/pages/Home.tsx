@@ -6,8 +6,9 @@ import { SettingsPage } from "./Settings";
 import { MonthlyView } from "./MonthlyView";
 import { InvestmentsPage } from "./Investments";
 import { Dashboard } from "./Dashboard";
+import { AnnualOverview } from "./AnnualOverview";
 
-type Tab = "monthly" | "dashboard" | "investments" | "settings";
+type Tab = "monthly" | "dashboard" | "annual" | "investments" | "settings";
 
 export function HomePage() {
   const { activeProfile, setActiveProfile } = useProfile();
@@ -38,6 +39,7 @@ export function HomePage() {
   const tabs: { key: Tab; label: string }[] = [
     { key: "monthly", label: "Mensal" },
     { key: "dashboard", label: "Dashboard" },
+    { key: "annual", label: "Anual" },
     { key: "investments", label: "Investimentos" },
     { key: "settings", label: "Configurações" },
   ];
@@ -77,6 +79,8 @@ export function HomePage() {
           <SettingsPage />
         ) : tab === "investments" ? (
           <InvestmentsPage />
+        ) : tab === "annual" ? (
+          <AnnualOverview />
         ) : tab === "dashboard" ? (
           <Dashboard year={year} month={month} onNavigate={navigate} />
         ) : (

@@ -9,6 +9,7 @@ import { autoLaunchRouter } from "./autoLaunch";
 import { installmentRouter } from "./installment";
 import { investmentRouter } from "./investment";
 import { dashboardRouter } from "./dashboard";
+import { annualOverviewRouter } from "./annualOverview";
 
 export { router, publicProcedure, createCallerFactory } from "./trpc";
 export type { Context } from "./trpc";
@@ -31,6 +32,7 @@ export const appRouter = router({
   installment: installmentRouter,
   investment: investmentRouter,
   dashboard: dashboardRouter,
+  annualOverview: annualOverviewRouter,
 });
 
 export type AppRouter = typeof appRouter;
