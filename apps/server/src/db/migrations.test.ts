@@ -60,6 +60,29 @@ describe("drizzle migrations", () => {
     sqlite.close();
   });
 
+  it("creates income_entries table scoped to profiles", () => {
+    const sqlite = new Database(":memory:");
+    sqlite.pragma("foreign_keys = ON");
+    const db = drizzle(sqlite);
+    runMigrations(db, sqlite);
+
+    sqlite.exec(`INSERT INTO profiles (name, theme) VALUES ('Alice', 'light')`);
+    const profile = sqlite.prepare("SELECT id FROM profiles WHERE id = last_insert_rowid()").get() as { id: number };
+    sqlite.exec(`INSERT INTO income_entries (profile_id, year, month, name, amount_cents) VALUES (${profile.id}, 2026, 4, 'Salary', 500000)`);
+    const entry = sqlite.prepare("SELECT * FROM income_entries WHERE profile_id = ?").get(profile.id) as {
+      id: number; profile_id: number; year: number; month: number; name: string; amount_cents: number;
+    };
+    expect(entry.name).toBe("Salary");
+    expect(entry.amount_cents).toBe(500000);
+    expect(entry.year).toBe(2026);
+    expect(entry.month).toBe(4);
+
+    sqlite.exec(`DELETE FROM profiles WHERE id = ${profile.id}`);
+    const remaining = sqlite.prepare("SELECT * FROM income_entries WHERE profile_id = ?").all(profile.id);
+    expect(remaining).toHaveLength(0);
+    sqlite.close();
+  });
+
   it("creates credit_cards table scoped to profiles with cascade delete", () => {
     const sqlite = new Database(":memory:");
     sqlite.pragma("foreign_keys = ON");

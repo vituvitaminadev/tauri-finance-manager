@@ -3,6 +3,7 @@ import { useProfile } from "../context/profile";
 import { useTheme } from "../context/theme";
 import { trpc } from "../lib/trpc";
 import { SettingsPage } from "./Settings";
+import { MonthlyView } from "./MonthlyView";
 
 export function HomePage() {
   const { activeProfile, setActiveProfile } = useProfile();
@@ -52,11 +53,7 @@ export function HomePage() {
         {showSettings ? (
           <SettingsPage />
         ) : (
-          <div className="flex h-full flex-col items-center justify-center gap-4 p-8">
-            <p className="text-muted-foreground">
-              Bem-vindo, {activeProfile?.name}!
-            </p>
-          </div>
+          <MonthlyView />
         )}
       </main>
     </div>

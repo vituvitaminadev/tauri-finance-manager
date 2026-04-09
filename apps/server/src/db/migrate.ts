@@ -41,4 +41,15 @@ export function runMigrations(
       name TEXT NOT NULL
     )
   `);
+
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS income_entries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+      year INTEGER NOT NULL,
+      month INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      amount_cents INTEGER NOT NULL
+    )
+  `);
 }
