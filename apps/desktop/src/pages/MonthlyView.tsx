@@ -50,13 +50,15 @@ const MONTH_NAMES = [
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
 ];
 
-export function MonthlyView() {
+interface MonthlyViewProps {
+  year: number;
+  month: number;
+  onNavigate: (delta: number) => void;
+}
+
+export function MonthlyView({ year, month, onNavigate }: MonthlyViewProps) {
   const { activeProfile } = useProfile();
   const profileId = activeProfile!.id;
-
-  const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth() + 1);
 
   const [spendingRefreshKey, setSpendingRefreshKey] = useState(0);
   const [incomeEntries, setIncomeEntries] = useState<IncomeEntry[]>([]);
@@ -100,14 +102,7 @@ export function MonthlyView() {
     });
   }, [profileId, year, month]);
 
-  function navigate(delta: number) {
-    let m = month + delta;
-    let y = year;
-    if (m < 1) { m = 12; y -= 1; }
-    if (m > 12) { m = 1; y += 1; }
-    setMonth(m);
-    setYear(y);
-  }
+  function navigate(delta: number) { onNavigate(delta); }
 
   // Income handlers
   async function addIncome(e: React.FormEvent) {

@@ -8,6 +8,7 @@ import { recurringIncomeRouter, fixedExpenseRouter } from "./recurring";
 import { autoLaunchRouter } from "./autoLaunch";
 import { installmentRouter } from "./installment";
 import { investmentRouter } from "./investment";
+import { dashboardRouter } from "./dashboard";
 
 export { router, publicProcedure, createCallerFactory } from "./trpc";
 export type { Context } from "./trpc";
@@ -29,6 +30,7 @@ export const appRouter = router({
   autoLaunch: autoLaunchRouter,
   installment: installmentRouter,
   investment: investmentRouter,
+  dashboard: dashboardRouter,
 });
 
 export type AppRouter = typeof appRouter;
