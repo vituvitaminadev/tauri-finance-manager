@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { router, publicProcedure } from "./trpc";
-import { profiles } from "../db/schema";
+import { profiles, categories } from "../db/schema";
+import { PREDEFINED_CATEGORIES } from "./category";
 
 export const profileRouter = router({
   list: publicProcedure.query(async ({ ctx }) => {
@@ -15,6 +16,10 @@ export const profileRouter = router({
         .insert(profiles)
         .values({ name: input.name, theme: "light" })
         .returning();
+      // Seed predefined categories for the new profile
+      await ctx.db.insert(categories).values(
+        PREDEFINED_CATEGORIES.map((name) => ({ profileId: profile.id, name }))
+      );
       return profile;
     }),
 

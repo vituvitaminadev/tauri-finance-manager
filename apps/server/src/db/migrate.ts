@@ -25,4 +25,20 @@ export function runMigrations(
       theme TEXT NOT NULL DEFAULT 'light'
     )
   `);
+
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS categories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+      name TEXT NOT NULL
+    )
+  `);
+
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS credit_cards (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+      name TEXT NOT NULL
+    )
+  `);
 }

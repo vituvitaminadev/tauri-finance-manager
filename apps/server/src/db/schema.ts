@@ -6,5 +6,19 @@ export const profiles = sqliteTable("profiles", {
   theme: text("theme", { enum: ["light", "dark"] }).notNull().default("light"),
 });
 
+export const categories = sqliteTable("categories", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  profileId: integer("profile_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+});
+
+export const creditCards = sqliteTable("credit_cards", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  profileId: integer("profile_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+});
+
 export type Profile = typeof profiles.$inferSelect;
 export type NewProfile = typeof profiles.$inferInsert;
+export type Category = typeof categories.$inferSelect;
+export type CreditCard = typeof creditCards.$inferSelect;
