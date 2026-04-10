@@ -35,4 +35,10 @@
     margin: 0;
     min-height: 100vh;
   }
+  input, select, textarea {
+    @apply bg-background text-foreground;
+  }
+  button {
+    @apply bg-background;
+  }
 }
