@@ -6,3 +6,7 @@ dist/
 *.local
 target/
 apps/desktop/src-tauri/binaries/
+package-lock.json
+loop-progress.md
+*.xlsx
+.claude/
