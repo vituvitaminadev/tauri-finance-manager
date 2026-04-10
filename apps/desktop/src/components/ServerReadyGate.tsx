@@ -12,6 +12,11 @@ export function ServerReadyGate({ children }: Props) {
   const [error, setError] = useState<string>("");
 
   useEffect(() => {
+    // In browser dev mode (no Tauri), the server is already running externally
+    if (!("__TAURI_INTERNALS__" in window)) {
+      setStatus("ready");
+      return;
+    }
     invoke("wait_for_server")
       .then(() => setStatus("ready"))
       .catch((e: unknown) => {
