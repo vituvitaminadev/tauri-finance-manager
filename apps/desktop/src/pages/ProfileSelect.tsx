@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { User } from "lucide-react";
 import { trpc } from "../lib/trpc";
 import { useProfile, type Profile } from "../context/profile";
 import { useTheme } from "../context/theme";
@@ -8,19 +9,40 @@ export function ProfileSelectPage() {
   const { setTheme } = useTheme();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
   const [creating, setCreating] = useState(false);
   const [renameId, setRenameId] = useState<number | null>(null);
   const [renameName, setRenameName] = useState("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  // Load profiles on mount
-  useState(() => {
-    trpc.profile.list.query().then((data) => {
-      setProfiles(data as Profile[]);
-      setLoading(false);
-    });
-  });
+  // Load profiles on mount, retrying until server is ready
+  useEffect(() => {
+    let cancelled = false;
+    let attempts = 0;
+    const MAX_ATTEMPTS = 20;
+    const RETRY_DELAY = 500;
+
+    function tryLoad() {
+      trpc.profile.list.query().then((data) => {
+        if (cancelled) return;
+        setProfiles(data as Profile[]);
+        setLoading(false);
+      }).catch(() => {
+        if (cancelled) return;
+        attempts++;
+        if (attempts < MAX_ATTEMPTS) {
+          setTimeout(tryLoad, RETRY_DELAY);
+        } else {
+          setError("Não foi possível conectar ao servidor. Verifique se ele está rodando.");
+          setLoading(false);
+        }
+      });
+    }
+
+    tryLoad();
+    return () => { cancelled = true; };
+  }, []);
 
   function enterProfile(profile: Profile) {
     setActiveProfile(profile);
@@ -61,6 +83,20 @@ export function ProfileSelectPage() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4">
+        <p className="text-destructive">{error}</p>
+        <button
+          onClick={() => { setError(null); setLoading(true); trpc.profile.list.query().then((data) => { setProfiles(data as Profile[]); setLoading(false); }).catch(() => { setError("Não foi possível conectar ao servidor."); setLoading(false); }); }}
+          className="rounded-md border px-4 py-2 text-sm hover:bg-accent"
+        >
+          Tentar novamente
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-8 p-8">
       <h1 className="text-4xl font-bold">Finance Manager</h1>
@@ -75,7 +111,7 @@ export function ProfileSelectPage() {
                 onClick={() => enterProfile(profile)}
                 className="flex h-32 w-32 flex-col items-center justify-center rounded-lg bg-card text-card-foreground shadow-md transition hover:ring-2 hover:ring-primary"
               >
-                <span className="text-4xl">👤</span>
+                <User className="h-10 w-10" />
                 <span className="mt-2 text-sm font-medium">{profile.name}</span>
               </button>
               <div className="flex gap-2">

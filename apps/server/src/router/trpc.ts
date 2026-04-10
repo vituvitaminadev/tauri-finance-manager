@@ -1,8 +1,9 @@
 import { initTRPC } from "@trpc/server";
-import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
+import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
 
 export interface Context {
-  db: BetterSQLite3Database;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  db: BaseSQLiteDatabase<"sync", any>;
 }
 
 const t = initTRPC.context<Context>().create();

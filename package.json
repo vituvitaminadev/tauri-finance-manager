@@ -3,10 +3,12 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
+    "dev": "pnpm dev:server & pnpm dev:desktop",
     "dev:server": "pnpm --filter server dev",
     "dev:desktop": "pnpm --filter desktop dev",
     "test": "pnpm --filter server test",
-    "build:server": "pnpm --filter server build"
+    "build:server": "pnpm --filter server build",
+    "build:sidecar": "pnpm --filter server build:sidecar"
   },
   "packageManager": "pnpm@10.33.0",
   "pnpm": {

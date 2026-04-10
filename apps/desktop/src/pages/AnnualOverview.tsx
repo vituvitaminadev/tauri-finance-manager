@@ -117,7 +117,7 @@ export function AnnualOverview() {
           <ComposedChart data={monthChartData}>
             <XAxis dataKey="name" />
             <YAxis tickFormatter={(v) => `R$${v}`} />
-            <Tooltip formatter={(v: number) => formatBRL(v * 100)} />
+            <Tooltip formatter={(v) => formatBRL(Number(v) * 100)} />
             <Legend />
             <Bar dataKey="Receitas" fill="#22c55e" radius={[3, 3, 0, 0]} />
             <Line type="monotone" dataKey="Despesas" stroke="#f43f5e" strokeWidth={2} dot={false} />
@@ -179,7 +179,7 @@ export function AnnualOverview() {
             <LineChart data={investChartData}>
               <XAxis dataKey="name" />
               <YAxis tickFormatter={(v) => `R$${v}`} />
-              <Tooltip formatter={(v: number) => formatBRL(v * 100)} />
+              <Tooltip formatter={(v) => formatBRL(Number(v) * 100)} />
               <Legend />
               {goals.map((g, i) => (
                 <Line key={g.id} type="monotone" dataKey={g.name} stroke={COLORS[i % COLORS.length]} strokeWidth={2} dot={false} />

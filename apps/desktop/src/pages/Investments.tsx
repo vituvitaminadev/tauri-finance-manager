@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { trpc } from "../lib/trpc";
 import { useProfile } from "../context/profile";
+import { CurrencyInput } from "../components/CurrencyInput";
 
 interface Goal { id: number; name: string; targetCents: number | null; archived: boolean; }
 interface Contribution { id: number; goalId: number; year: number; month: number; amountCents: number; note: string | null; }
@@ -25,10 +26,10 @@ export function InvestmentsPage() {
   const [contributions, setContributions] = useState<Contribution[]>([]);
 
   const [newGoalName, setNewGoalName] = useState("");
-  const [newGoalTarget, setNewGoalTarget] = useState("");
+  const [newGoalTarget, setNewGoalTarget] = useState<number | undefined>(undefined);
   const [addingGoal, setAddingGoal] = useState(false);
 
-  const [newContribAmount, setNewContribAmount] = useState("");
+  const [newContribAmount, setNewContribAmount] = useState<number | undefined>(undefined);
   const [newContribNote, setNewContribNote] = useState("");
   const now = new Date();
   const [contribYear, setContribYear] = useState(now.getFullYear());
@@ -36,7 +37,7 @@ export function InvestmentsPage() {
 
   const [deleteContribId, setDeleteContribId] = useState<number | null>(null);
   const [editContribId, setEditContribId] = useState<number | null>(null);
-  const [editContribAmount, setEditContribAmount] = useState("");
+  const [editContribAmount, setEditContribAmount] = useState<number | undefined>(undefined);
   const [editContribNote, setEditContribNote] = useState("");
 
   useEffect(() => {
@@ -64,9 +65,9 @@ export function InvestmentsPage() {
     await trpc.investment.createGoal.mutate({
       profileId,
       name: newGoalName.trim(),
-      targetCents: newGoalTarget ? Number(newGoalTarget) : undefined,
+      targetCents: newGoalTarget ?? undefined,
     });
-    setNewGoalName(""); setNewGoalTarget(""); setAddingGoal(false);
+    setNewGoalName(""); setNewGoalTarget(undefined); setAddingGoal(false);
     loadGoals();
   }
 
@@ -83,18 +84,18 @@ export function InvestmentsPage() {
       goalId: selectedGoalId,
       year: contribYear,
       month: contribMonth,
-      amountCents: Number(newContribAmount),
+      amountCents: newContribAmount!,
       note: newContribNote || undefined,
     });
     setContributions((prev) => [...prev, c as Contribution]);
-    setNewContribAmount(""); setNewContribNote("");
+    setNewContribAmount(undefined); setNewContribNote("");
     loadGoals(); // refresh totals
   }
 
   async function saveEditContrib(e: React.FormEvent) {
     e.preventDefault();
     if (editContribId === null) return;
-    const updated = await trpc.investment.updateContribution.mutate({ id: editContribId, amountCents: Number(editContribAmount), note: editContribNote || null });
+    const updated = await trpc.investment.updateContribution.mutate({ id: editContribId, amountCents: editContribAmount, note: editContribNote || null });
     setContributions((prev) => prev.map((c) => c.id === editContribId ? (updated as Contribution) : c));
     setEditContribId(null);
     loadGoals();
@@ -150,7 +151,7 @@ export function InvestmentsPage() {
         {addingGoal && (
           <form onSubmit={createGoal} className="mt-4 space-y-2">
             <input autoFocus value={newGoalName} onChange={(e) => setNewGoalName(e.target.value)} placeholder="Nome da meta" className="w-full rounded-md border px-3 py-2 text-sm" />
-            <input value={newGoalTarget} onChange={(e) => setNewGoalTarget(e.target.value)} placeholder="Meta (centavos, opcional)" type="number" min="0" className="w-full rounded-md border px-3 py-2 text-sm" />
+            <CurrencyInput value={newGoalTarget} onChange={setNewGoalTarget} placeholder="Meta (opcional)" className="w-full rounded-md border px-3 py-2 text-sm" />
             <div className="flex gap-2">
               <button type="button" onClick={() => setAddingGoal(false)} className="flex-1 px-3 py-2 text-sm">Cancelar</button>
               <button type="submit" className="flex-1 rounded-md bg-primary px-3 py-2 text-sm text-primary-foreground">Criar</button>
@@ -180,7 +181,7 @@ export function InvestmentsPage() {
                     <div className="text-xs text-muted-foreground">{MONTH_NAMES[c.month - 1]}/{c.year}{c.note && ` · ${c.note}`}</div>
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => { setEditContribId(c.id); setEditContribAmount(String(c.amountCents)); setEditContribNote(c.note ?? ""); }} className="text-xs text-muted-foreground underline">Editar</button>
+                    <button onClick={() => { setEditContribId(c.id); setEditContribAmount(c.amountCents); setEditContribNote(c.note ?? ""); }} className="text-xs text-muted-foreground underline">Editar</button>
                     <button onClick={() => setDeleteContribId(c.id)} className="text-xs text-destructive underline">Excluir</button>
                   </div>
                 </li>
@@ -192,7 +193,7 @@ export function InvestmentsPage() {
             <form onSubmit={addContribution} className="space-y-2">
               <h4 className="text-sm font-medium">Novo aporte</h4>
               <div className="flex gap-2">
-                <input value={newContribAmount} onChange={(e) => setNewContribAmount(e.target.value)} placeholder="Valor (centavos)" type="number" min="0" className="flex-1 rounded-md border px-3 py-2 text-sm" />
+                <CurrencyInput value={newContribAmount} onChange={setNewContribAmount} placeholder="R$ 0,00" className="flex-1 rounded-md border px-3 py-2 text-sm" />
                 <select value={contribMonth} onChange={(e) => setContribMonth(Number(e.target.value))} className="rounded-md border px-3 py-2 text-sm">
                   {MONTH_NAMES.map((m, i) => <option key={i + 1} value={i + 1}>{m}</option>)}
                 </select>
@@ -214,7 +215,7 @@ export function InvestmentsPage() {
         <div className="fixed inset-0 flex items-center justify-center bg-black/50">
           <form onSubmit={saveEditContrib} className="flex flex-col gap-4 rounded-lg bg-background p-6 shadow-xl">
             <h2 className="text-lg font-semibold">Editar aporte</h2>
-            <input autoFocus value={editContribAmount} onChange={(e) => setEditContribAmount(e.target.value)} type="number" min="0" className="rounded-md border px-3 py-2 text-sm" />
+            <CurrencyInput autoFocus value={editContribAmount} onChange={setEditContribAmount} placeholder="R$ 0,00" className="rounded-md border px-3 py-2 text-sm" />
             <input value={editContribNote} onChange={(e) => setEditContribNote(e.target.value)} placeholder="Nota (opcional)" className="rounded-md border px-3 py-2 text-sm" />
             <div className="flex justify-end gap-2">
               <button type="button" onClick={() => setEditContribId(null)} className="px-4 py-2 text-sm">Cancelar</button>

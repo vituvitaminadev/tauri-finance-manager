@@ -3,6 +3,7 @@ import { trpc } from "../lib/trpc";
 import { useProfile } from "../context/profile";
 import { CategorySpendingTable } from "../components/CategorySpendingTable";
 import { InstallmentForm } from "../components/InstallmentForm";
+import { CurrencyInput } from "../components/CurrencyInput";
 
 interface IncomeEntry {
   id: number;
@@ -68,21 +69,21 @@ export function MonthlyView({ year, month, onNavigate }: MonthlyViewProps) {
 
   // Income form state
   const [newIncomeName, setNewIncomeName] = useState("");
-  const [newIncomeAmount, setNewIncomeAmount] = useState("");
+  const [newIncomeAmount, setNewIncomeAmount] = useState<number | undefined>(undefined);
   const [editIncomeId, setEditIncomeId] = useState<number | null>(null);
   const [editIncomeName, setEditIncomeName] = useState("");
-  const [editIncomeAmount, setEditIncomeAmount] = useState("");
+  const [editIncomeAmount, setEditIncomeAmount] = useState<number | undefined>(undefined);
   const [deleteIncomeId, setDeleteIncomeId] = useState<number | null>(null);
 
   // Expense form state
   const [newExpenseName, setNewExpenseName] = useState("");
-  const [newExpenseAmount, setNewExpenseAmount] = useState("");
+  const [newExpenseAmount, setNewExpenseAmount] = useState<number | undefined>(undefined);
   const [newExpenseMethod, setNewExpenseMethod] = useState<PaymentMethod>("debit");
   const [newExpenseCatId, setNewExpenseCatId] = useState<number | null>(null);
   const [newExpenseCardId, setNewExpenseCardId] = useState<number | null>(null);
   const [editExpenseId, setEditExpenseId] = useState<number | null>(null);
   const [editExpenseName, setEditExpenseName] = useState("");
-  const [editExpenseAmount, setEditExpenseAmount] = useState("");
+  const [editExpenseAmount, setEditExpenseAmount] = useState<number | undefined>(undefined);
   const [editExpenseMethod, setEditExpenseMethod] = useState<PaymentMethod>("debit");
   const [editExpenseCatId, setEditExpenseCatId] = useState<number | null>(null);
   const [editExpenseCardId, setEditExpenseCardId] = useState<number | null>(null);
@@ -108,15 +109,15 @@ export function MonthlyView({ year, month, onNavigate }: MonthlyViewProps) {
   async function addIncome(e: React.FormEvent) {
     e.preventDefault();
     if (!newIncomeName.trim() || !newIncomeAmount) return;
-    const entry = await trpc.income.create.mutate({ profileId, year, month, name: newIncomeName.trim(), amountCents: Number(newIncomeAmount) });
+    const entry = await trpc.income.create.mutate({ profileId, year, month, name: newIncomeName.trim(), amountCents: newIncomeAmount });
     setIncomeEntries((prev) => [...prev, entry as IncomeEntry]);
-    setNewIncomeName(""); setNewIncomeAmount("");
+    setNewIncomeName(""); setNewIncomeAmount(undefined);
   }
 
   async function saveIncomeEdit(e: React.FormEvent) {
     e.preventDefault();
     if (editIncomeId === null) return;
-    const updated = await trpc.income.update.mutate({ id: editIncomeId, name: editIncomeName, amountCents: Number(editIncomeAmount) });
+    const updated = await trpc.income.update.mutate({ id: editIncomeId, name: editIncomeName, amountCents: editIncomeAmount });
     setIncomeEntries((prev) => prev.map((e) => (e.id === editIncomeId ? (updated as IncomeEntry) : e)));
     setEditIncomeId(null);
   }
@@ -134,13 +135,13 @@ export function MonthlyView({ year, month, onNavigate }: MonthlyViewProps) {
     const entry = await trpc.expense.create.mutate({
       profileId, year, month,
       name: newExpenseName.trim(),
-      amountCents: Number(newExpenseAmount),
+      amountCents: newExpenseAmount,
       paymentMethod: newExpenseMethod,
       categoryId: newExpenseCatId,
       creditCardId: newExpenseMethod === "credit_card" ? newExpenseCardId : null,
     });
     setExpenseEntries((prev) => [...prev, entry as ExpenseEntry]);
-    setNewExpenseName(""); setNewExpenseAmount(""); setNewExpenseMethod("debit"); setNewExpenseCatId(null); setNewExpenseCardId(null);
+    setNewExpenseName(""); setNewExpenseAmount(undefined); setNewExpenseMethod("debit"); setNewExpenseCatId(null); setNewExpenseCardId(null);
     setSpendingRefreshKey((k) => k + 1);
   }
 
@@ -150,7 +151,7 @@ export function MonthlyView({ year, month, onNavigate }: MonthlyViewProps) {
     const updated = await trpc.expense.update.mutate({
       id: editExpenseId,
       name: editExpenseName,
-      amountCents: Number(editExpenseAmount),
+      amountCents: editExpenseAmount,
       paymentMethod: editExpenseMethod,
       categoryId: editExpenseCatId,
       creditCardId: editExpenseMethod === "credit_card" ? editExpenseCardId : null,
@@ -212,7 +213,7 @@ export function MonthlyView({ year, month, onNavigate }: MonthlyViewProps) {
               </span>
               <div className="flex items-center gap-4">
                 <span className="text-sm font-medium text-green-600">{formatBRL(entry.amountCents)}</span>
-                <button onClick={() => { setEditIncomeId(entry.id); setEditIncomeName(entry.name); setEditIncomeAmount(String(entry.amountCents)); }} className="text-xs text-muted-foreground underline">Editar</button>
+                <button onClick={() => { setEditIncomeId(entry.id); setEditIncomeName(entry.name); setEditIncomeAmount(entry.amountCents); }} className="text-xs text-muted-foreground underline">Editar</button>
                 <button onClick={() => setDeleteIncomeId(entry.id)} className="text-xs text-destructive underline">Excluir</button>
               </div>
             </li>
@@ -220,7 +221,7 @@ export function MonthlyView({ year, month, onNavigate }: MonthlyViewProps) {
         </ul>
         <form onSubmit={addIncome} className="mt-4 flex gap-2">
           <input value={newIncomeName} onChange={(e) => setNewIncomeName(e.target.value)} placeholder="Descrição" className="flex-1 rounded-md border px-3 py-2 text-sm" />
-          <input value={newIncomeAmount} onChange={(e) => setNewIncomeAmount(e.target.value)} placeholder="Centavos" type="number" min="0" className="w-32 rounded-md border px-3 py-2 text-sm" />
+          <CurrencyInput value={newIncomeAmount} onChange={setNewIncomeAmount} placeholder="R$ 0,00" className="w-32 rounded-md border px-3 py-2 text-sm" />
           <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground">Adicionar</button>
         </form>
       </section>
@@ -249,7 +250,7 @@ export function MonthlyView({ year, month, onNavigate }: MonthlyViewProps) {
               <div className="flex items-center gap-4">
                 <span className="text-sm font-medium text-red-600">{formatBRL(entry.amountCents)}</span>
                 <button onClick={() => {
-                  setEditExpenseId(entry.id); setEditExpenseName(entry.name); setEditExpenseAmount(String(entry.amountCents));
+                  setEditExpenseId(entry.id); setEditExpenseName(entry.name); setEditExpenseAmount(entry.amountCents);
                   setEditExpenseMethod(entry.paymentMethod as PaymentMethod); setEditExpenseCatId(entry.categoryId); setEditExpenseCardId(entry.creditCardId);
                 }} className="text-xs text-muted-foreground underline">Editar</button>
                 {entry.installmentGroupId && (
@@ -263,7 +264,7 @@ export function MonthlyView({ year, month, onNavigate }: MonthlyViewProps) {
         <form onSubmit={addExpense} className="mt-4 space-y-2">
           <div className="flex gap-2">
             <input value={newExpenseName} onChange={(e) => setNewExpenseName(e.target.value)} placeholder="Descrição" className="flex-1 rounded-md border px-3 py-2 text-sm" />
-            <input value={newExpenseAmount} onChange={(e) => setNewExpenseAmount(e.target.value)} placeholder="Centavos" type="number" min="0" className="w-32 rounded-md border px-3 py-2 text-sm" />
+            <CurrencyInput value={newExpenseAmount} onChange={setNewExpenseAmount} placeholder="R$ 0,00" className="w-32 rounded-md border px-3 py-2 text-sm" />
           </div>
           <div className="flex gap-2">
             <select value={newExpenseMethod} onChange={(e) => setNewExpenseMethod(e.target.value as PaymentMethod)} className="flex-1 rounded-md border px-3 py-2 text-sm">
@@ -311,7 +312,7 @@ export function MonthlyView({ year, month, onNavigate }: MonthlyViewProps) {
           <form onSubmit={saveIncomeEdit} className="flex flex-col gap-4 rounded-lg bg-background p-6 shadow-xl">
             <h2 className="text-lg font-semibold">Editar receita</h2>
             <input autoFocus value={editIncomeName} onChange={(e) => setEditIncomeName(e.target.value)} className="rounded-md border px-3 py-2 text-sm" />
-            <input value={editIncomeAmount} onChange={(e) => setEditIncomeAmount(e.target.value)} type="number" min="0" className="rounded-md border px-3 py-2 text-sm" />
+            <CurrencyInput value={editIncomeAmount} onChange={setEditIncomeAmount} placeholder="R$ 0,00" className="rounded-md border px-3 py-2 text-sm" />
             <div className="flex justify-end gap-2">
               <button type="button" onClick={() => setEditIncomeId(null)} className="px-4 py-2 text-sm">Cancelar</button>
               <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground">Salvar</button>
@@ -337,7 +338,7 @@ export function MonthlyView({ year, month, onNavigate }: MonthlyViewProps) {
           <form onSubmit={saveExpenseEdit} className="flex flex-col gap-4 rounded-lg bg-background p-6 shadow-xl">
             <h2 className="text-lg font-semibold">Editar despesa</h2>
             <input autoFocus value={editExpenseName} onChange={(e) => setEditExpenseName(e.target.value)} className="rounded-md border px-3 py-2 text-sm" />
-            <input value={editExpenseAmount} onChange={(e) => setEditExpenseAmount(e.target.value)} type="number" min="0" className="rounded-md border px-3 py-2 text-sm" />
+            <CurrencyInput value={editExpenseAmount} onChange={setEditExpenseAmount} placeholder="R$ 0,00" className="rounded-md border px-3 py-2 text-sm" />
             <select value={editExpenseMethod} onChange={(e) => setEditExpenseMethod(e.target.value as PaymentMethod)} className="rounded-md border px-3 py-2 text-sm">
               {Object.entries(PAYMENT_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select>

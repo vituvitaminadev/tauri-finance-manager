@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { trpc } from "../lib/trpc";
 import { useProfile } from "../context/profile";
+import { CurrencyInput } from "./CurrencyInput";
 
 interface Category { id: number; name: string; }
 interface CreditCard { id: number; name: string; }
@@ -19,7 +20,7 @@ export function InstallmentForm({ categories, creditCards, currentYear, currentM
   const profileId = activeProfile!.id;
 
   const [name, setName] = useState("");
-  const [totalCents, setTotalCents] = useState("");
+  const [totalCents, setTotalCents] = useState<number | undefined>(undefined);
   const [installments, setInstallments] = useState("12");
   const [startYear, setStartYear] = useState(String(currentYear));
   const [startMonth, setStartMonth] = useState(String(currentMonth));
@@ -32,7 +33,7 @@ export function InstallmentForm({ categories, creditCards, currentYear, currentM
     await trpc.installment.create.mutate({
       profileId,
       name: name.trim(),
-      totalAmountCents: Number(totalCents),
+      totalAmountCents: totalCents,
       installments: Number(installments),
       startYear: Number(startYear),
       startMonth: Number(startMonth),
@@ -44,7 +45,7 @@ export function InstallmentForm({ categories, creditCards, currentYear, currentM
   }
 
   const perInstallment = totalCents && installments
-    ? Math.round(Number(totalCents) / Number(installments))
+    ? Math.round(totalCents / Number(installments))
     : 0;
 
   return (
@@ -56,8 +57,8 @@ export function InstallmentForm({ categories, creditCards, currentYear, currentM
 
         <div className="flex gap-2">
           <div className="flex-1">
-            <label className="mb-1 block text-xs text-muted-foreground">Total (centavos)</label>
-            <input value={totalCents} onChange={(e) => setTotalCents(e.target.value)} type="number" min="1" className="w-full rounded-md border px-3 py-2 text-sm" />
+            <label className="mb-1 block text-xs text-muted-foreground">Total</label>
+            <CurrencyInput value={totalCents} onChange={setTotalCents} placeholder="R$ 0,00" className="w-full rounded-md border px-3 py-2 text-sm" />
           </div>
           <div className="w-24">
             <label className="mb-1 block text-xs text-muted-foreground">Parcelas</label>

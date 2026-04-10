@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { trpcServer } from "@hono/trpc-server";
 import { appRouter } from "./router/index";
-import { db } from "./db/index";
+import { db } from "./db/bun";
 
 const PORT = Number(process.env.PORT ?? 3001);
 

@@ -8,7 +8,7 @@ function makeTestCaller() {
   const sqlite = new Database(":memory:");
   sqlite.pragma("foreign_keys = ON");
   const db = drizzle(sqlite);
-  runMigrations(db, sqlite);
+  runMigrations(sqlite);
   const createCaller = createCallerFactory(appRouter);
   const caller = createCaller({ db });
   return { caller, sqlite };

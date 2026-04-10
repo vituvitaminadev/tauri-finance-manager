@@ -7,22 +7,22 @@ describe("drizzle migrations", () => {
   it("runs without error on a fresh database", () => {
     const sqlite = new Database(":memory:");
     const db = drizzle(sqlite);
-    expect(() => runMigrations(db, sqlite)).not.toThrow();
+    expect(() => runMigrations(sqlite)).not.toThrow();
     sqlite.close();
   });
 
   it("is idempotent — running twice does not throw", () => {
     const sqlite = new Database(":memory:");
     const db = drizzle(sqlite);
-    runMigrations(db, sqlite);
-    expect(() => runMigrations(db, sqlite)).not.toThrow();
+    runMigrations(sqlite);
+    expect(() => runMigrations(sqlite)).not.toThrow();
     sqlite.close();
   });
 
   it("creates the profiles table with id, name, and theme columns", () => {
     const sqlite = new Database(":memory:");
     const db = drizzle(sqlite);
-    runMigrations(db, sqlite);
+    runMigrations(sqlite);
 
     sqlite.exec(`INSERT INTO profiles (name, theme) VALUES ('Alice', 'dark')`);
     const row = sqlite.prepare("SELECT * FROM profiles WHERE name = 'Alice'").get() as {
@@ -40,7 +40,7 @@ describe("drizzle migrations", () => {
     const sqlite = new Database(":memory:");
     sqlite.pragma("foreign_keys = ON");
     const db = drizzle(sqlite);
-    runMigrations(db, sqlite);
+    runMigrations(sqlite);
 
     sqlite.exec(`INSERT INTO profiles (name, theme) VALUES ('Alice', 'light')`);
     const profile = sqlite.prepare("SELECT id FROM profiles WHERE name = 'Alice'").get() as { id: number };
@@ -64,7 +64,7 @@ describe("drizzle migrations", () => {
     const sqlite = new Database(":memory:");
     sqlite.pragma("foreign_keys = ON");
     const db = drizzle(sqlite);
-    runMigrations(db, sqlite);
+    runMigrations(sqlite);
 
     sqlite.exec(`INSERT INTO profiles (name, theme) VALUES ('Alice', 'light')`);
     const profile = sqlite.prepare("SELECT id FROM profiles WHERE id = last_insert_rowid()").get() as { id: number };
@@ -87,7 +87,7 @@ describe("drizzle migrations", () => {
     const sqlite = new Database(":memory:");
     sqlite.pragma("foreign_keys = ON");
     const db = drizzle(sqlite);
-    runMigrations(db, sqlite);
+    runMigrations(sqlite);
 
     sqlite.exec(`INSERT INTO profiles (name, theme) VALUES ('Alice', 'light')`);
     const profile = sqlite.prepare("SELECT id FROM profiles WHERE id = last_insert_rowid()").get() as { id: number };
@@ -120,7 +120,7 @@ describe("drizzle migrations", () => {
     const sqlite = new Database(":memory:");
     sqlite.pragma("foreign_keys = ON");
     const db = drizzle(sqlite);
-    runMigrations(db, sqlite);
+    runMigrations(sqlite);
 
     sqlite.exec(`INSERT INTO profiles (name, theme) VALUES ('Alice', 'light')`);
     const profile = sqlite.prepare("SELECT id FROM profiles WHERE id = last_insert_rowid()").get() as { id: number };
@@ -145,7 +145,7 @@ describe("drizzle migrations", () => {
     const sqlite = new Database(":memory:");
     sqlite.pragma("foreign_keys = ON");
     const db = drizzle(sqlite);
-    runMigrations(db, sqlite);
+    runMigrations(sqlite);
 
     sqlite.exec(`INSERT INTO profiles (name, theme) VALUES ('Alice', 'light')`);
     const profile = sqlite.prepare("SELECT id FROM profiles WHERE id = last_insert_rowid()").get() as { id: number };
@@ -176,7 +176,7 @@ describe("drizzle migrations", () => {
     const sqlite = new Database(":memory:");
     sqlite.pragma("foreign_keys = ON");
     const db = drizzle(sqlite);
-    runMigrations(db, sqlite);
+    runMigrations(sqlite);
 
     sqlite.exec(`INSERT INTO profiles (name, theme) VALUES ('Alice', 'light')`);
     const profile = sqlite.prepare("SELECT id FROM profiles WHERE id = last_insert_rowid()").get() as { id: number };
@@ -194,7 +194,7 @@ describe("drizzle migrations", () => {
     const sqlite = new Database(":memory:");
     sqlite.pragma("foreign_keys = ON");
     const db = drizzle(sqlite);
-    runMigrations(db, sqlite);
+    runMigrations(sqlite);
 
     sqlite.exec(`INSERT INTO profiles (name, theme) VALUES ('Alice', 'light')`);
     const profile = sqlite.prepare("SELECT id FROM profiles WHERE id = last_insert_rowid()").get() as { id: number };
@@ -215,7 +215,7 @@ describe("drizzle migrations", () => {
     const sqlite = new Database(":memory:");
     sqlite.pragma("foreign_keys = ON");
     const db = drizzle(sqlite);
-    runMigrations(db, sqlite);
+    runMigrations(sqlite);
 
     sqlite.exec(`INSERT INTO profiles (name, theme) VALUES ('Alice', 'light')`);
     const profile = sqlite.prepare("SELECT id FROM profiles WHERE id = last_insert_rowid()").get() as { id: number };
@@ -245,7 +245,7 @@ describe("drizzle migrations", () => {
     const sqlite = new Database(":memory:");
     sqlite.pragma("foreign_keys = ON");
     const db = drizzle(sqlite);
-    runMigrations(db, sqlite);
+    runMigrations(sqlite);
 
     sqlite.exec(`INSERT INTO profiles (name, theme) VALUES ('Alice', 'light')`);
     const profile = sqlite.prepare("SELECT id FROM profiles WHERE id = last_insert_rowid()").get() as { id: number };

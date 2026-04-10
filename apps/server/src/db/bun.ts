@@ -1,5 +1,5 @@
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
+import { Database } from "bun:sqlite";
+import { drizzle } from "drizzle-orm/bun-sqlite";
 import { runMigrations } from "./migrate";
 import path from "path";
 import os from "os";
@@ -12,8 +12,8 @@ function getDbPath(): string {
 }
 
 const sqlite = new Database(getDbPath());
-sqlite.pragma("journal_mode = WAL");
-sqlite.pragma("foreign_keys = ON");
+sqlite.exec("PRAGMA journal_mode = WAL");
+sqlite.exec("PRAGMA foreign_keys = ON");
 
 export const db = drizzle(sqlite);
 

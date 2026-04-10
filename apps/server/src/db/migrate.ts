@@ -1,10 +1,9 @@
-import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
-import type { Database } from "better-sqlite3";
+interface RawSQLiteConnection {
+  exec(sql: string): unknown;
+  prepare(sql: string): { all(): unknown[] };
+}
 
-export function runMigrations(
-  _db: BetterSQLite3Database,
-  sqlite: Database
-): void {
+export function runMigrations(sqlite: RawSQLiteConnection): void {
   sqlite.exec(`
     CREATE TABLE IF NOT EXISTS __drizzle_migrations (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

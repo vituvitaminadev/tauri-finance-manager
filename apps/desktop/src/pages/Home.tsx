@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Moon, Sun, User } from "lucide-react";
 import { useProfile } from "../context/profile";
 import { useTheme } from "../context/theme";
 import { trpc } from "../lib/trpc";
@@ -62,11 +63,11 @@ export function HomePage() {
         </nav>
         <div className="flex items-center gap-3">
           <button onClick={handleToggleTheme} className="rounded-md bg-secondary px-3 py-1.5 text-sm">
-            {theme === "dark" ? "🌙 Escuro" : "☀️ Claro"}
+            {theme === "dark" ? <><Moon className="inline h-4 w-4 mr-1" /> Escuro</> : <><Sun className="inline h-4 w-4 mr-1" /> Claro</>}
           </button>
           {activeProfile && (
             <button onClick={() => setActiveProfile(null)} className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm hover:bg-accent">
-              <span>👤</span>
+              <User className="h-4 w-4" />
               <span>{activeProfile.name}</span>
             </button>
           )}

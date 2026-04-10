@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { trpc } from "../lib/trpc";
 import { useProfile } from "../context/profile";
+import { CurrencyInput } from "../components/CurrencyInput";
 
-interface Category { id: number; name: string; }
-interface CreditCard { id: number; name: string; }
 interface CategoryItem { id: number; profileId: number; name: string; }
 interface CreditCardItem { id: number; profileId: number; name: string; }
 interface RecurringIncomeTemplate { id: number; name: string; amountCents: number; active: boolean; }
@@ -41,12 +40,12 @@ export function SettingsPage() {
 
   // Recurring income state
   const [newRIName, setNewRIName] = useState("");
-  const [newRIAmount, setNewRIAmount] = useState("");
+  const [newRIAmount, setNewRIAmount] = useState<number | undefined>(undefined);
   const [deleteRIId, setDeleteRIId] = useState<number | null>(null);
 
   // Fixed expense state
   const [newFEName, setNewFEName] = useState("");
-  const [newFEAmount, setNewFEAmount] = useState("");
+  const [newFEAmount, setNewFEAmount] = useState<number | undefined>(undefined);
   const [newFEMethod, setNewFEMethod] = useState<PaymentMethod>("debit");
   const [newFECatId, setNewFECatId] = useState<number | null>(null);
   const [newFECardId, setNewFECardId] = useState<number | null>(null);
@@ -105,9 +104,9 @@ export function SettingsPage() {
   async function createRI(e: React.FormEvent) {
     e.preventDefault();
     if (!newRIName.trim() || !newRIAmount) return;
-    const t = await trpc.recurringIncome.create.mutate({ profileId, name: newRIName.trim(), amountCents: Number(newRIAmount) });
+    const t = await trpc.recurringIncome.create.mutate({ profileId, name: newRIName.trim(), amountCents: newRIAmount });
     setRecurringIncomes((prev) => [...prev, t as RecurringIncomeTemplate]);
-    setNewRIName(""); setNewRIAmount("");
+    setNewRIName(""); setNewRIAmount(undefined);
   }
   async function deactivateRI(id: number) {
     const updated = await trpc.recurringIncome.deactivate.mutate({ id });
@@ -123,9 +122,9 @@ export function SettingsPage() {
   async function createFE(e: React.FormEvent) {
     e.preventDefault();
     if (!newFEName.trim() || !newFEAmount) return;
-    const t = await trpc.fixedExpense.create.mutate({ profileId, name: newFEName.trim(), amountCents: Number(newFEAmount), paymentMethod: newFEMethod, categoryId: newFECatId });
+    const t = await trpc.fixedExpense.create.mutate({ profileId, name: newFEName.trim(), amountCents: newFEAmount, paymentMethod: newFEMethod, categoryId: newFECatId });
     setFixedExpenses((prev) => [...prev, t as FixedExpenseTemplate]);
-    setNewFEName(""); setNewFEAmount(""); setNewFEMethod("debit"); setNewFECatId(null); setNewFECardId(null);
+    setNewFEName(""); setNewFEAmount(undefined); setNewFEMethod("debit"); setNewFECatId(null); setNewFECardId(null);
   }
   async function deactivateFE(id: number) {
     const updated = await trpc.fixedExpense.deactivate.mutate({ id });
@@ -200,7 +199,7 @@ export function SettingsPage() {
         </ul>
         <form onSubmit={createRI} className="mt-4 flex gap-2">
           <input value={newRIName} onChange={(e) => setNewRIName(e.target.value)} placeholder="Nome" className="flex-1 rounded-md border px-3 py-2 text-sm" />
-          <input value={newRIAmount} onChange={(e) => setNewRIAmount(e.target.value)} placeholder="Centavos" type="number" min="0" className="w-32 rounded-md border px-3 py-2 text-sm" />
+          <CurrencyInput value={newRIAmount} onChange={setNewRIAmount} placeholder="R$ 0,00" className="w-32 rounded-md border px-3 py-2 text-sm" />
           <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground">Adicionar</button>
         </form>
       </section>
@@ -229,7 +228,7 @@ export function SettingsPage() {
         <form onSubmit={createFE} className="mt-4 space-y-2">
           <div className="flex gap-2">
             <input value={newFEName} onChange={(e) => setNewFEName(e.target.value)} placeholder="Nome" className="flex-1 rounded-md border px-3 py-2 text-sm" />
-            <input value={newFEAmount} onChange={(e) => setNewFEAmount(e.target.value)} placeholder="Centavos" type="number" min="0" className="w-32 rounded-md border px-3 py-2 text-sm" />
+            <CurrencyInput value={newFEAmount} onChange={setNewFEAmount} placeholder="R$ 0,00" className="w-32 rounded-md border px-3 py-2 text-sm" />
           </div>
           <div className="flex gap-2">
             <select value={newFEMethod} onChange={(e) => setNewFEMethod(e.target.value as PaymentMethod)} className="flex-1 rounded-md border px-3 py-2 text-sm">

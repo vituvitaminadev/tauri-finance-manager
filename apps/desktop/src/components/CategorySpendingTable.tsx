@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { trpc } from "../lib/trpc";
+import { CurrencyInput } from "./CurrencyInput";
 
 interface Category { id: number; name: string; }
 interface SpendingRow { categoryId: number; spentCents: number; }
@@ -22,7 +23,7 @@ export function CategorySpendingTable({ profileId, year, month, categories, refr
   const [spending, setSpending] = useState<SpendingRow[]>([]);
   const [limits, setLimits] = useState<LimitRow[]>([]);
   const [editingLimitCatId, setEditingLimitCatId] = useState<number | null>(null);
-  const [limitInput, setLimitInput] = useState("");
+  const [limitInput, setLimitInput] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     trpc.categoryLimit.getCategorySpending.query({ profileId, year, month })
@@ -32,16 +33,15 @@ export function CategorySpendingTable({ profileId, year, month, categories, refr
   }, [profileId, year, month, refreshKey]);
 
   async function saveLimit(categoryId: number) {
-    const limitCents = Math.round(parseFloat(limitInput) * 100);
-    if (isNaN(limitCents) || limitCents < 0) return;
-    const updated = await trpc.categoryLimit.setLimit.mutate({ profileId, categoryId, year, month, limitCents });
+    if (limitInput === undefined) return;
+    const updated = await trpc.categoryLimit.setLimit.mutate({ profileId, categoryId, year, month, limitCents: limitInput });
     setLimits((prev) => {
       const exists = prev.find((l) => l.categoryId === categoryId);
       if (exists) return prev.map((l) => l.categoryId === categoryId ? (updated as LimitRow) : l);
       return [...prev, updated as LimitRow];
     });
     setEditingLimitCatId(null);
-    setLimitInput("");
+    setLimitInput(undefined);
   }
 
   const categoriesWithSpending = categories.map((cat) => {
@@ -73,13 +73,11 @@ export function CategorySpendingTable({ profileId, year, month, categories, refr
               <td className="py-2 text-right">
                 {editingLimitCatId === cat.id ? (
                   <span className="flex items-center justify-end gap-1">
-                    <input
+                    <CurrencyInput
                       autoFocus
                       value={limitInput}
-                      onChange={(e) => setLimitInput(e.target.value)}
-                      type="number"
-                      min="0"
-                      step="0.01"
+                      onChange={setLimitInput}
+                      placeholder="R$ 0,00"
                       className="w-24 rounded border px-2 py-0.5 text-xs"
                       onKeyDown={(e) => { if (e.key === "Enter") saveLimit(cat.id); if (e.key === "Escape") setEditingLimitCatId(null); }}
                     />
@@ -87,7 +85,7 @@ export function CategorySpendingTable({ profileId, year, month, categories, refr
                   </span>
                 ) : (
                   <button
-                    onClick={() => { setEditingLimitCatId(cat.id); setLimitInput(cat.limit !== null ? String(cat.limit / 100) : ""); }}
+                    onClick={() => { setEditingLimitCatId(cat.id); setLimitInput(cat.limit !== null ? cat.limit : undefined); }}
                     className="text-xs text-muted-foreground underline"
                   >
                     {cat.limit !== null ? formatBRL(cat.limit) : "Definir"}

@@ -7,7 +7,7 @@ import { appRouter, createCallerFactory } from "./index";
 function makeTestCaller() {
   const sqlite = new Database(":memory:");
   const db = drizzle(sqlite);
-  runMigrations(db, sqlite);
+  runMigrations(sqlite);
   const createCaller = createCallerFactory(appRouter);
   return createCaller({ db });
 }
