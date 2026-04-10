@@ -10,3 +10,5 @@ package-lock.json
 loop-progress.md
 *.xlsx
 .claude/
+apps/desktop/README.md
+apps/desktop/public/
